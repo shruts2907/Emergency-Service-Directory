@@ -1,0 +1,51 @@
+$(document).ready(function(){
+  
+	var which_list_a = $('#list a');;
+	var offset = 0; 
+	var stepping = 0.03;
+	var list = $('#list');
+	var $list = $(list)
+	
+	$list.mousemove(function(e){
+		var topOfList = $list.eq(0).offset().top
+		var listHeight = $list.height()
+		stepping = (e.clientY - topOfList) /  listHeight * 0.2 - 0.1;
+		
+	});
+	
+	
+//to make circular 
+	for (var i = which_list_a.length - 1; i >= 0; i--)
+	{
+		which_list_a[i].elemAngle = i * Math.PI * 2 / which_list_a.length;
+	}
+	
+	
+	setInterval(rotateThisWay, 120);
+	
+	
+	function rotateThisWay(){
+		for (var i = which_list_a.length - 1; i >= 0; i--){
+			
+			var angle = which_list_a[i].elemAngle + offset;
+			
+			x = 120 + Math.sin(angle) * 30;
+			y = 45 + Math.cos(angle) * 40;
+			size = Math.round(40 - Math.sin(angle) * 40);
+			
+			var which_list_aCenter = $(which_list_a[i]).width() / 2;
+	
+			var leftValue = (($list.width()/2) * x / 100 - which_list_aCenter) + "px"
+	
+			$(which_list_a[i]).css("fontSize", size/5 + "pt");
+			$(which_list_a[i]).css("opacity",size/100);
+			$(which_list_a[i]).css("zIndex" ,size);
+			$(which_list_a[i]).css("left" ,leftValue);
+			$(which_list_a[i]).css("top", y + "%");
+		}
+		
+		offset += stepping;
+	}
+	
+	
+});
