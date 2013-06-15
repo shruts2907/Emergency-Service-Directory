@@ -39,3 +39,8 @@ Following 3 plugins I use
 
 Animation in the header:
 the script is in org_rotation.js ==> resourse 3D jquery animation 
+
+DEMO:
+=====
+
+http://people.rit.edu/~smt9471/736/project/
