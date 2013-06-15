@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>536 p3 ex</title>
+<link href="css/jquery.dataTables.css" rel="stylesheet" type="text/css"/>
+<link href="css/index.css" rel="stylesheet" type="text/css"/>
+<link href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css"/>
+<link rel="stylesheet" type="text/css" href="css/tooltipster.css" />    
+
+<!-- google map plugin -->
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+
+<!-- jquery plugin -->
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+
+<!-- go map for google map plugin -->
+<script type="text/javascript" src="js/jquery.gomap-1.3.2.min.js"></script> 
+
+<!-- created my own customize plugin for modal but not working -->
+<script type="text/javascript" src="js/jquery.s_modal_plugin.js"></script>
+
+<!--script to create animation not a plugin -->
+<script type="text/javascript" src="org_rotation.js"></script>
+
+<script type="text/javascript" src="modal.js"></script>
+
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/jquery.validate.min.js"></script>
+
+<!-- plugin 1 for data tables for displaying data in table format -->
+<script src="js/jquery.dataTables.js" type="text/javascript"></script>
+<!--<script src="http://code.jquery.com/jquery-latest.js" type="text/javascript"></script> -->
+<!--<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>-->
+
+<!-- Plugin #2 jquery ui plugin for displaying modal window and error dialog box -->
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js" type="text/javascript"></script>
+
+<!--PLugin #3 toottipster plugin for hovering info -->
+<script type="text/javascript" src="js/jquery.tooltipster.js"></script>
+
+<script type="text/javascript">
+  //now what?
+	// sample org id's: 1, 2, 1001
+	/*if they enter an orgId (we will get it next class through a search), we need to find:
+		-What different areas of information the organization has (/Application/Tabs?orgId=x)
+		-then, find each area on demand (each will need it's own call)
+			General
+				Path: ...ESD/{orgId}/General
+			Locations
+				Path: ...ESD/{orgId}/Locations
+			Treatment
+				Path: ...ESD/{orgId}/Treatments
+			Training
+				Path: ...ESD/{orgId}/Training
+			Facilities
+				Path: ...ESD/{orgId}/Facilities
+			Equipment
+				Path: ...ESD/{orgId}/Equipment
+			Physicians
+				Path: ...ESD/{orgId}/Physicians
+			People
+				Path: ...ESD/{orgId}/People
+	*/
+	
+	$(document).ready(function(){
+		//loads the tooltips plugin get calls during input text tag when writing pHyscian or organization name
+		$('.tooltip').tooltipster({animation: 'grow'});
+		
+
+});
+
+
+	/****************************************************************************
+	*function to get data id for orgainzation to identify tabs and fetch other
+	*information
+	*****************************************************************************/
+	/*function getData(id) {
+		//for any organization, figure out how many 'tabs' it has
+		$.ajax({
+			type:'get',
+			async:true,
+			url:'proxy.php',
+			data: {path:"/Application/Tabs?orgId="+id},
+			success: function(data,status) {
+				if($(data).find('error').length!=0) {
+					//output some error message
+				} else {
+					//console.log(data);
+					//get the data to shove into output
+					//whatever we get back, build a dropdown menu so we
+					//can view the different types of information on this org.
+					var x='<select onchange="window[\'get\'+$(this).val()]('+id+') ">';
+					$('Tab',data).each(function() {
+						
+						x += '<option value="'+$(this).text()+'">'+$(this).text()+'</option>';
+					});
+					//dump it out
+					$('#dump').html(x+'</select>');
+					getGeneral(id);
+				}
+			} //success function
+			
+		});
+	}
+	*/
+	
+	/********************8
+	intializing my customized jquery plugin but not working
+	tried using in check search function but doesn't pop up window
+	****************************/
+	$(document).ready(function(){
+	$('.my_plugin').s_modal_plugin();
+});
+	/************************************************************************
+	*function to fetch genral information when clicked on the Name tag of the table
+	*
+	***************************************************************************/
+	function getGeneral(id) {
+		$.ajax({
+			type:'get',
+			url:'proxy.php',
+			data:{path:'/'+id+'/General'},
+			dataType: 'xml',
+			success: function(data) {
+				if ($(data).find('error').length!=0) {
+					//do some type of error message
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: General Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+					}); //end of error dialog box
+				} else {
+					//make a table
+					var x ='<table ><tr><td>Name:</td><td>'+checkForEmpty($(data).find('name').text())+'</td></tr>';
+					x+='<tr><td>Description:</td><td>'+checkForEmpty($(data).find('description').text())+'</td></tr>';
+					x+='<tr><td>Email:</td><td><a href=\"mailto:'+checkForEmpty($(data).find('email').text())+'\">'+checkForEmpty($(data).find('email').text())+'</td></tr>';
+					x+='<tr><td>Website:</td><td><a href= \"'+checkForEmpty($(data).find('website').text())+'\">'+checkForEmpty($(data).find('website').text())+'</a></td></tr>';
+					x+='<tr><td>Number of Members:</td><td>'+checkForEmpty($(data).find('nummembers').text())+'</td></tr>';
+					x+='<tr><td>Number of Calls:</td><td>'+checkForEmpty($(data).find('numcalls').text())+'</td></tr></table>';
+					$('#General').html(x);
+				}
+			},//END OF SUCCESS
+			error:function(){
+				$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: General Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+			
+			}//end of error
+		});
+	}
+	
+	/*****************************************************************************************
+	*function to get locations
+	*
+	******************************************************************************************/
+	
+	function getLocations(id) {
+		//$('#output').html('going to get Location of '+id);
+		$.ajax({
+			type:'get',
+			url:'proxy.php',
+			data:{path:'/'+id+'/Locations'},
+			dataType: 'xml',
+			success: function(data) {
+					
+				if ($(data).find('error').length!=0) {
+					//do some type of error message
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Locations Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+				} else {
+					//make a table
+					var x=''
+					
+					if($(data).find('count').text() > 0){
+					x= '<h2>Pick a Location</h2> <form><select name="locationSelect" id="locationSelectId">';
+					$(data).find('location').each(function(){
+						x+= '<option value="'+$(this).find('type').text()+'">'+checkForEmpty($(this).find('type').text())+'</option>';
+					
+					});
+					x+= '</select></form><div id="locationData"></div>';
+					$('#Locations').html(x);//bind select option tag to the Location id tag in the ui modal view
+					
+					//check which select option is selected and display data
+					$('#locationSelectId').change(function(){
+						console.log("finally inside");
+						load_google_map(data,$('#locationSelectId').val());
+					});
+					}
+					
+					//load the map defaulty if not selected
+					load_google_map(data,$('#locationSelectId').val());
+					
+					
+				}//end of if else
+				
+			},//END OF SUCCESS
+			error:function(){
+				$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Location Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+			
+			}//end of error
+		}); //end of ajax call
+	}
+
+	/*******************************************************************************************
+	* function load google map
+	*
+	*****************************************************************************************/
+	function load_google_map(data, selectedValue){
+	
+		//check if latitude or longitude is null
+	/*	if(!isNaN(latPos) || !isNaN(longPos)){							
+			$("#map").goMap({ 
+						maptype: 'ROADMAP',
+						zoom: 15, 
+						markers: [{  
+							latitude: latPos, 
+							longitude: longPos, 
+							address:complete_address,
+							title: 'Location from XML' 
+						}]
+					});				
+							  
+		}else{
+			$("#map").goMap({ 
+						maptype: 'ROADMAP',
+						zoom: 15, 
+						markers: [{  
+							latitude: latPos, 
+							longitude: longPos, 
+							title: 'Location from XML' 
+						}]
+					});
+		
+		}
+		*/
+		
+		var latPos;
+		var longPos;
+		var complete_address;
+		$(data).find('location').each(function(){
+			if($(this).find('type').text() == selectedValue){
+				
+				x = '<table>';
+				x += '<tr><td>Address 1</td><td> '+checkForEmpty($(this).find('address1').text())+' </td></tr>';
+				x += '<tr><td>Address 2</td><td> '+checkForEmpty($(this).find('address2').text())+' </td></tr>';
+				x += '<tr><td>City</td><td> '+checkForEmpty($(this).find('city').text())+' </td></tr>';
+				x += '<tr><td>State</td><td> '+checkForEmpty($(this).find('state').text())+' </td></tr>';
+				x += '<tr><td>Zip</td><td> '+checkForEmpty($(this).find('zip').text())+' </td></tr>';
+				x += '<tr><td>Phone</td><td> '+checkForEmpty($(this).find('phone').text())+' </td></tr>';
+				x += '<tr><td>TTY Phone</td><td> '+checkForEmpty($(this).find('ttyphone').text())+' </td></tr>';
+				x += '<tr><td>Fax</td><td> '+checkForEmpty($(this).find('fax').text())+' </td></tr>';
+				x += '<tr><td>Latitude</td><td> '+checkForEmpty($(this).find('latitude').text())+' </td></tr>';
+				x += '<tr><td>Longitude</td><td> '+checkForEmpty($(this).find('longitude').text())+' </td></tr>';
+				x += '<tr><td>County</td><td> '+checkForEmpty($(this).find('countyName').text())+' </td></tr>';
+				
+				x += '</table><div id="map" ></div>';
+				
+				$('#locationData').html(x);
+				
+				location_from_xml = $(this).find('type').text()+" Locattion ";
+				latPos = $(this).find('latitude').text();
+				longPos = $(this).find('longitude').text();
+				complete_address =  $(this).find('address1').text()+' '+ $(this).find('city').text()+' '+ $(this).find('state').text();
+			}
+		
+		});
+		
+		$('#map').empty();
+		/******************************************************************
+		* code refered from https://developers.google.com/maps/documentation/javascript/geocoding
+		**********************************************************************/
+		if(latPos == '' || latPos == 'null'){
+			//var geocoder = new google.maps.Geocoder(); //converts human redable address to coordinates google api method
+			//geocoder.geocode( { 'address': complete_address}, function(results, status) {
+				//indicates geocode was successfull
+			//	if (status == google.maps.GeocoderStatus.OK) {
+
+					//$('#map').goMap({'center': results[0].geometry.location});
+					$("#map").goMap({ 
+						maptype: 'ROADMAP',
+						zoom: 15, 
+						markers: [{  
+							//latitude: latPos, 
+							//longitude: longPos, 
+							address:complete_address,
+							title: location_from_xml 
+						}]
+					});
+				//}
+			//}); 
+		}else{
+		
+			//var coordinates = new google.maps.LatLng(latPos, longPos);
+			//$('#map').goMap({'center': coordinates});
+			$("#map").goMap({ 
+						maptype: 'ROADMAP',
+						zoom: 15, 
+						markers: [{  
+							latitude: latPos, 
+							longitude: longPos, 
+							title: location_from_xml
+						}]
+					});
+		}
+
+		//code for street view here....
+		
+		
+		checkForEmpty('#locationData');
+		
+	}
+	/******************************************************************************************
+	* get Training function
+	*
+	*************************************************************************************/
+	function getTraining(id) {
+		//$('#output').html('going to get Training of '+id);
+		$.ajax({
+			type:'get',
+			url:'proxy.php',
+			data:{path:'/'+id+'/Training'},
+			dataType: 'xml',
+			success: function(data) {
+				var x="";
+				if ($(data).find('error').length!=0) {
+					//do some type of error message
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Training Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+				} else {
+				
+					if($(data).find('count').text()==0){
+						x+="<div><table id=\"trainingTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" >";
+						x+='<thead><tr><th class=\"header\">No Training data Available</th></tr></thead><tbody>';
+						x+="<\/table>";
+					}
+					else{
+					
+						//make a table
+						x+="<div><table id=\"trainingTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" ><thead><tr><th class=\"header\" "+
+						"style=\"width:90px;\">Type<\/th><th class=\"header\"> Abbreviation <\/th> "+
+						"<th class=\"header\">Type ID<\/th><\/tr><\/thead>";
+						$('training',data).each(
+							function() {
+								x+="<tr>";
+								x+="<td>"+checkForEmpty($(this).find('type').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('abbreviation').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('typeId').text())+"<\/td>";
+								x+="<\/tr>";
+							}
+						);
+						x+="<\/table>";
+					
+				}//end of if else
+				$('#Training').html(x);
+				$('#trainingTable').dataTable();
+			}
+			
+			},//END OF SUCCESS
+			error:function(){
+						//display error here
+						$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Training Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+			} //end of error
+		}); //end of ajax call
+	}	
+	
+	/**************************************************************************************
+	* function to get treatment
+	*
+	**************************************************************************************/
+	function getTreatment(id) {
+		//$('#output').html('going to get Treatment of '+id);
+		$.ajax({
+			type:'get',
+			url:'proxy.php',
+			data:{path:'/'+id+'/Treatments'},
+			dataType: 'xml',
+			success: function(data) {
+				var x="";
+				if ($(data).find('error').length!=0) {
+					//do some type of error message
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Treatment Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+				} else {
+				
+					if($(data).find('count').text()==0){
+						x+="<div><table id=\"treatmentTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" >";
+						x+='<thead><tr><th class=\"header\">No Treatments data Available</th></tr></thead><tbody>';
+						x+="<\/table>";
+					}
+					else{
+					
+						//make a table
+						x+="<div><table id=\"treatmentTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" ><thead><tr><th class=\"header\" "+
+						">Type<\/th><th class=\"header\"> Abbreviation <\/th> "+
+						"<th class=\"header\">Type ID<\/th><\/tr><\/thead>";
+						$('treatment',data).each(
+							function() {
+								x+="<tr>";
+								x+="<td>"+checkForEmpty($(this).find('type').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('abbreviation').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('typeId').text())+"<\/td>";
+								x+="<\/tr>";
+							}
+						);
+						x+="<\/table>";
+					
+				}//end of if else
+				$('#Treatment').html(x);
+				$('#treatmentTable').dataTable();
+			}
+			
+			},//END OF SUCCESS
+			error:function(){
+						//display error here
+						$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Treatment Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+			} //end of error
+		});
+		
+		
+	}	
+	
+	/****************************************************************************************
+	* function to get Facilities
+	*
+	*****************************************************************************************/
+	function getFacilities(id) {
+		//$('#output').html('going to get Facilities of '+id);
+		
+		$.ajax({
+			type:'get',
+			url:'proxy.php',
+			data:{path:'/'+id+'/Facilities'},
+			dataType: 'xml',
+			success: function(data) {
+				var x="";
+				if ($(data).find('error').length!=0) {
+					//do some type of error message
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Facility Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+				} else {
+				
+					if($(data).find('count').text()==0){
+						x+="<div><table id=\"facilityTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" >";
+						x+='<thead><tr><th class=\"header\">No Facilities data Available</th></tr></thead><tbody>';
+						x+="<\/table>";
+					}
+					else{
+					
+						//make a table
+						x+="<div><table id=\"facilityTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" ><thead><tr><th class=\"header\" "+
+						"style=\"width:90px;\">Type<\/th><th class=\"header\"> Quantity <\/th> "+
+						"<th class=\"header\">Description<\/th><\/tr><\/thead>";
+						$('facility',data).each(
+							function() {
+								x+="<tr>";
+								x+="<td>"+checkForEmpty($(this).find('type').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('quantity').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('description').text())+"<\/td>";
+								x+="<\/tr>";
+							}
+						);
+						x+="<\/table>";
+					
+				}//end of if else
+				$('#Facilities ').html(x);
+				$('#facilityTable').dataTable();
+			}
+			
+			},//END OF SUCCESS
+			error:function(){
+						//display error here
+						$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Facility Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+			} //end of error
+		});
+	}
+	/****************************************************************************************
+	* function getEuipment
+	*
+	***************************************************************************************/
+	function getEquipment(id) {
+		//$('#output').html('going to get Equipment of '+id);
+		$.ajax({
+			type:'get',
+			url:'proxy.php',
+			data:{path:'/'+id+'/Equipment'},
+			dataType: 'xml',
+			success: function(data) {
+				var x="";
+				if ($(data).find('error').length!=0) {
+					//do some type of error message
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Equipment Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+				} else {
+				
+					if($(data).find('count').text()==0){
+						x+="<div><table id=\"equipmentTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" >";
+						x+='<thead><tr><th class=\"header\">No Equipment data Available</th></tr></thead><tbody>';
+						x+="<\/table>";
+					}
+					else{
+					
+						//make a table
+						x+="<div><table id=\"equipmentTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" ><thead><tr><th class=\"header\" "+
+						"style=\"width:90px;\">Type<\/th><th class=\"header\"> Quantity <\/th> "+
+						"<th class=\"header\">Description<\/th><\/tr><\/thead>";
+						$('equipment',data).each(
+							function() {
+								x+="<tr>";
+								x+="<td>"+checkForEmpty($(this).find('type').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('quantity').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('description').text())+"<\/td>";
+								x+="<\/tr>";
+							}
+						);
+						x+="<\/table>";
+					
+				}//end of if else
+				$('#Equipment').html(x);
+				$('#equipmentTable').dataTable();
+			}
+			
+			},//END OF SUCCESS
+			error:function(){
+						//display error here
+						 $("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Equipment Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+			} //end of error
+		});
+	}	
+	/******************************************************************************************
+	*function to get Physcians
+	*
+	***********************************************************************************************/
+	function getPhysicians(id) {
+		//$('#output').html('going to get Physicians of '+id);
+		$.ajax({
+			type:'get',
+			url:'proxy.php',
+			data:{path:'/'+id+'/Physicians'},
+			dataType: 'xml',
+			success: function(data) {
+				var x="";
+				if ($(data).find('error').length!=0) {
+					//do some type of error message
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Physcians Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+				} else {
+				
+					if($(data).find('count').text()==0){
+						x+="<div><table id=\"physicianTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" >";
+						x+='<thead><tr><th class=\"header\">No Physcians data Available</th></tr></thead><tbody>';
+						x+="<\/table>";
+					}
+					else{
+					
+						//make a table
+						x+="<div><table id=\"physicianTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" ><thead><tr><th class=\"header\" "+
+						"style=\"width:90px;\">Name<\/th><th class=\"header\"> License <\/th> "+
+						"<th class=\"header\">Phone<\/th><\/tr><\/thead>";
+						$('physician',data).each(
+							function() {
+								var physicianName = checkForEmpty($(this).find('lName').text())+', '+ checkForEmpty($(this).find('fName').text());
+								x+="<tr>";
+								x+="<td>"+physicianName+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('license').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('phone').text())+"<\/td>";
+								x+="<\/tr>";
+							}
+						);
+						x+="<\/table>";
+					
+				}//end of if else
+				$('#Physicians').html(x);
+				$('#physicianTable').dataTable();
+			}
+			
+			},//END OF SUCCESS
+			error:function(){
+						//display error here
+						$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Physcians Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+			}//end of error
+		});//end of ajax call
+	}	
+	
+	/********************************************************************************
+	* function get people info
+	*
+	************************************************************************************/
+	function getPeople(orgId) {
+		//$('#output').html('going to get People of '+id);
+		$.ajax({
+			type:'get',
+			async:true,
+			url:'proxy.php',
+			data:{path:'/'+orgId+'/People'},
+			dataType:'xml',
+			success:function(data){
+				
+				if($(data).find('siteCount').text() > 0){
+					x= '<h5>Choose a site</h5> <form><select name="peopleSelect" id="peopleSelectId">';
+					$(data).find('site').each(function(){
+						x+= '<option value="'+$(this).attr('siteId')+'">'+checkForEmpty($(this).attr('address'))+'</option>';
+					
+					});
+					x+= '<option value="select_all"> Show All People </option> ';
+					x+= '</select></form><div id="peopleData"></div>';
+					$('#People').html(x);
+					
+					$('#peopleSelectId').change(function(){
+						load_selected_people(data,$('#peopleSelectId').val());
+					});
+					load_selected_people(data,$('#peopleSelectId').val());
+					
+				}//end of if			
+				
+				
+			},//END OF SUCCESS
+			error:function(){
+						//display error here
+						 $("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: People Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+						}//end of error
+		});
+	}
+	
+	/********************************************************************************
+	*function to load people
+	*
+	***********************************************************************************/
+		function load_selected_people(data, selectedValue){
+		var x="";
+		//Then display the list of people
+		$(data).find('site').each(function(){
+			var site = '<h4>Site '+ checkForEmpty($(this).attr('siteId'))+': '+checkForEmpty($(this).attr('address'))+'</h4>';
+			if($(this).attr('siteId') == selectedValue){
+				$('#peopleData').empty().html(site);
+				if($(this).find('personCount').text() > 0){
+					 x = '<table id=\"peopleTable\" class=\"tablesorter\" border=\"0\" cellpadding=\"0\" cellspacing=\"1\" >';
+					x+="<thead><tr><th class=\"header\" "+
+						">Name<\/th><th class=\"header\"> Role <\/th></thead> ";
+					$(this).find('person').each(function(){
+					
+					x += '<tr><td> '+checkForEmpty($(this).find('lName').text())+' </td>';
+					x += '<td> '+checkForEmpty($(this).find('role').text())+' </td></tr>';
+					
+					});
+					x += '</table>';
+					$('#peopleData').append(x);
+					$('#peopleTable').dataTable(); //apend the result to datatable plugin
+					
+				}else{
+					x+="<table id=\"peopleTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" >";
+						x+='<thead><tr><th class=\"header\">No People data Available Here</th></tr></thead>';
+						x+="<\/table>";
+				
+					$('#peopleData').append(x);
+					$('#peopleTable').dataTable();
+				}
+				
+			}
+			
+		
+		}); //end of for each
+		
+		//If the value was select all, then show all the people, first check to see if we have people at all.
+		if(selectedValue == "select_all"){
+				var totalPeople = false;
+				
+					$(data).find('personCount').each(function(){
+						if($(this).text() > 0){
+							totalPeople = true;
+							
+						}
+					});
+				
+				//Display if we have at least one person....
+				if(totalPeople){
+				
+					$('#peopleData').empty().html('<h4>Showing all people</h4>');
+					
+					 x = '<table id=\"peopleTable\" class=\"tablesorter\" border=\"0\" cellpadding=\"0\" cellspacing=\"1\" >';
+					x+="<thead><tr><th class=\"header\" "+
+						">Name<\/th><th class=\"header\"> Role <\/th> </thead>";
+					
+					$(data).find('person').each(function(){
+					
+						x += '<tr><td> '+checkForEmpty($(this).find('lName').text())+' </td>';
+						x += '<td> '+checkForEmpty($(this).find('role').text())+' </td></tr>';
+					
+					});
+					
+					
+					x += '</table>';
+					$('#peopleData').append(x);
+					$('#peopleTable').dataTable();
+				}
+				//If we don't have any people at all, output this message
+				else{
+					x+="<div><table id=\"peopleTable1\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" >";
+						x+='<thead><tr><th class=\"header\">No People data Available Anywhere</th></tr></thead>';
+						x+="<\/table>";
+					$('#peopleData').empty().html(x);	
+					$('#peopleTable').dataTable();
+				} //end of if else total people
+		}//end of if select all
+	
+	}
+	//to display Ny as default value in form for state
+	$(document).ready(function() {
+		getCities('NY');
+		getOrgTypes();
+	});
+	
+	/**********************************************************
+	*function to get cities
+	*
+	**********************************************************/
+	function getCities(which) {
+		if (which=='') {
+			$('#orgCitySearch').html("City/Town<input id=\"cityTown\" type=\"text\" />");				
+		} else {
+			$.ajax ({
+				type: 'GET',
+				async: true,
+				cache: false,
+				url: 'proxy.php',
+				data: {path: "/Cities?state="+which},
+				dataType: 'xml',
+				success: function(data,status) {
+					var x='';
+					if ($(data).find('error').length != 0) {
+						//have an error what do you want to do????
+						$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: City Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+					}); //end of error dialog box
+					} else if ($(data).find('row').length==0 && which != '') {
+					
+						$('#orgCitySearch').html("City/Town<input id=\"cityTown\" type=\"text\" "+"value=\"No cities/towns in "+which+"\" />");
+					} else {
+					
+						x += "<select id=\"cityTown\" name=\"town\"><option value=\"\">"+"--cities--<\/option>";
+						
+						$('row',data).each(
+							function() {
+							
+								x+='<option value="'+$(this).find('city').text()+'">'+$(this).find('city').text()+'<\/option>';
+							}
+						);
+						x+="<\/select>";
+						$('#orgCitySearch').html(x);
+					}//END OF IF ELSE 
+				}, //success
+				error: function(){
+				
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: City Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+					}); //end of error dialog box
+				}//end of error
+			});
+		}
+	}
+	
+	/***********************************************************************************
+	*function to fetch organization type
+	*
+	**********************************************************************************/
+	function getOrgTypes() {
+		$.ajax({
+			type:'GET',
+			async:true,
+			cache:false,
+			url: 'proxy.php',
+			data: {path: "/OrgTypes"},
+			dataType: 'xml',
+			success: function(data,status) {
+				var x='';
+				if ($(data).find('error').length != 0) {
+					//do something or nothing?
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Organizatio type Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+					}); //end of error dialog box
+				} else {
+					x+='<option value="">All Organization Types<\/option>';
+					$('row',data).each(
+						function() {
+							x+='<option value="'+$(this).find('type').text()+'">'+
+								$(this).find('type').text()+'<\/option>';
+						}
+					);
+					$('#orgType').html(x);
+				}
+			}, //end of success
+			error: function(){
+				$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Organizatin Type Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+					}); //end of error dialog box
+			
+			}//end of error
+		});
+	}
+	
+	/***************************************************************************
+	*function that works when search button is clicked on the main form
+	*
+	**************************************************************************/
+	function checkSearch() {
+	console.log($('#Form1').serialize());
+		$.ajax( {
+			type:'GET',
+			async:true,
+			cache:false,
+			url: "proxy.php",
+			data: {path: "/Organizations?"+$('#Form1').serialize()},
+			dataType: 'xml',
+			success: function(data,status) {
+				var x='';
+				$('#output').html('');
+				if ($(data).find('error').length !=0) {
+					/*$('error',data).each(
+						function() {
+							x+=" error getting data";
+						}*/
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Search Not Found',
+						show: {
+							effect: "blind",
+							duration: 1000
+						  },
+						hide: {
+							effect: "explode",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							clearAll();
+							}
+					    }
+					}); //end of error dialog box
+					
+				} else if ($(data).find('row').length==0) {
+					//display this if no state or city or organization result not found for that particular selection
+					var y = null;
+					y="No data matches for: "+$('#orgType').val() +
+					(($('#orgName').val()!='') ? " > Name: "+$('#orgName').val() : " ") +
+					(($('#state').val()!='') ? " > State: "+$('#state').val() : " ");
+
+					if ($('#cityTown').val()=='' || $('#cityTown').val().search(/No cities/)==0) {
+						y+= "";
+					} else {
+						y+= " > City: "+$('#cityTown').val();
+					}//end of if else inside
+				
+					$('#modal_error').html("<p style=\"font-size: 13pt; background-color:yellow;\">"+y+"<p>");
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  }, 
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+					}); //end of error dialog box
+					
+				/* my plugin I tried to create my own customize plugin */
+					console.log("here");
+					/*
+					$('.my_plugin').s_modal_plugin({
+						height:'350',
+						width:'500',
+						title:'Error: Search Not Found',
+						description:'issim placerat. Nulla facilisi. Ut congue posuere vulputate.',		
+						top:'30%',
+						left:'40%',
+						});
+					*/
+		
+
+				} else if ($('#orgType').val() == 'Physician') {
+					//build a result for physicians with links to get a specific one
+					//do same for other orgTypes?
+					$('#resultsTitle').html('<h2> ( '+$(data).find('row').length+ ' total found) </h2>');
+					x+="<div><table id=\"myTable\" class=\"tablesorter tooltip\"  title=\"Click on the repective table headers to sort\" onmouseover=\"callToolTip()\" border=\"0\" "+
+					"cellpadding=\"0\" cellspacing=\"1\" ><thead><tr><th class=\"header\" "+
+					"style=\"width:90px;\">Type<\/th><th class=\"header\">Name<\/th> "+
+					"<th class=\"header\" >City<\/th><th class=\"header\">Zip<\/th> " +
+					"<th class=\"header\" style=\"width:70px;\">County<\/th> "+
+					"<th class=\"header\" style=\"width:40px;\">State<\/th><\/tr><\/thead>";
+					$('row',data).each(
+						function() {
+							x+="<tr>";
+							var physicianName = checkForEmpty($(this).find('lName').text())+', '+ checkForEmpty($(this).find('fName').text());
+							x+="<td>"+checkForEmpty($(this).find('type').text())+"<\/td>";
+							x+="<td style=\"cursor:pointer;color:#987; text-align:center;\" onmouseover=\"callToolTip();\" onclick=\"getTabs("+
+					$(this).find('OrganizationID').text()+");\" class=\"tooltip\"  title=\"Click to open modal window to see more information\">"+physicianName+"<\/td>";
+							x+= "<td>"+checkForEmpty($(this).find('city').text())+"<\/td>";
+							x+= "<td>"+checkForEmpty($(this).find('zip').text())+"<\/td>";
+							x+= "<td>"+checkForEmpty($(this).find('CountyName').text())+"<\/td>";
+							x+= "<td>"+checkForEmpty($(this).find('State').text())+"<\/td><\/tr>";
+						}
+					);
+					x+="<\/table>";
+					
+				} else {
+						//result for organization type other than Physcian
+						$('#resultsTitle').html('<h2> ( '+$(data).find('row').length+ ' total found) </h2>');
+						x+="<div><table id=\"myTable\" class=\"tablesorter\" border=\"0\" "+
+						"cellpadding=\"0\" cellspacing=\"1\" ><thead><tr><th class=\"header tooltip\"  title=\"Click here to sort\" onmouseover=\"callToolTip()\" "+
+						"style=\"width:90px;\">Type<\/th><th class=\"header tooltip\"  title=\"Click here to sort\" onmouseover=\"callToolTip()\">Name<\/th> "+
+						"<th class=\"header tooltip\"  title=\"Click here to sort\" onmouseover=\"callToolTip()\" >City<\/th><th class=\"header tooltip\"  title=\"Click here to sort\" onmouseover=\"callToolTip()\">Zip<\/th> " +
+						"<th class=\"header tooltip\"  title=\"Click here to sort\" onmouseover=\"callToolTip()\" style=\"width:70px;\">County<\/th> "+
+						"<th class=\"header tooltip\"  title=\"Click here to sort\" onmouseover=\"callToolTip()\" style=\"width:40px;\">State<\/th><\/tr><\/thead>";
+						$('row',data).each(
+							function() {
+								x+="<tr>";
+								x+="<td>"+checkForEmpty($(this).find('type').text())+"<\/td>";
+								x+="<td style=\"cursor:pointer;color:#987; text-align:center;\" onmouseover=\"callToolTip();\" onclick=\"getTabs("+
+						$(this).find('OrganizationID').text()+");\" class=\"tooltip\"  title=\"Click to open modal window to see more information\">"+checkForEmpty($(this).find('Name').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('city').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('zip').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('CountyName').text())+"<\/td>";
+								x+= "<td>"+checkForEmpty($(this).find('State').text())+"<\/td><\/tr>";
+							}
+						);
+					x+="<\/table>";
+				}//end of else
+				showAnimation();
+				$('#output').html(x);
+				$('#myTable').dataTable();
+
+			}, //success
+			error:function(){
+				$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+					}); //end of error dialog box
+			
+			
+			}
+		});
+		
+	}//check Search
+	
+	/************************************
+	*function to check if the string is empty or not
+	*
+	*****************************************/
+	function checkForEmpty(what){
+		if(what == 'null'){
+			return "N/A";
+		}else{
+			return what;
+		}
+	}
+	
+	/************************************************************************
+	*function to calculate the tabs of organizations selected from table
+	*
+	*************************************************************************/
+	function getTabs(orgId){
+		
+		$.ajax({
+			type:'get',
+			async:true,
+			url:'proxy.php',
+			data: {path:"/Application/Tabs?orgId="+orgId},
+			success: function(data,status) {
+				if($(data).find('error').length!=0) {
+					//output some error message
+					$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Tabs Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+					}); //end of error dialog box
+				} else {
+					//console.log(data);
+					//get the data to shove into output
+					//whatever we get back, build a dropdown menu so we
+					//can view the different types of information on this org.
+					
+					if($(data).find('error').length!=0){
+							//output something about a bad search?
+							$('#output').empty();
+							$("#modal_error").dialog({
+							  modal:true,
+							  title:'Error !',
+							   buttons: {
+								Ok: function() {
+								$( this ).dialog( "close" );
+								}
+							   }
+							});			    
+							
+						}else{
+							var x='<div id="tabs"><ul>';
+							var divs='';
+							
+							$('Tab',data).each(function(){
+								
+								x+='<li><a onclick="window[\'get\'+$(this).text()]('+orgId+')" href="#'+$(this).text()+'">'+$(this).text()+'</a></li>';						
+								divs+='<div id="'+$(this).text()+'"></div>';
+								console.log($(this).text());
+								//binding the tab with div and corressponding to display respective contents eg div id = Locations
+							});
+							x+='</ul>'+divs;
+							$('#dump').html(x+'</div>');
+							
+							//calling the .tabs() function from jQuery UI
+							$("#tabs").tabs();
+							
+							//load general tab by default
+							getGeneral(orgId);
+							
+							//opening the modal
+							// and call the dialog box
+							var the_dialog_modal_box={
+							  width: 960,
+							  height:500,
+							  title: 'Information',					  
+							  hide: { effect: "explode", duration: 1200
+									}
+							};					
+							$("#dump").dialog(the_dialog_modal_box).dialog("open");
+							
+							
+						}
+					}//end of else
+					
+			}, //success function
+			error:function(){
+						//display error here
+						$("#modal_error").dialog({
+					    modal:true,
+					    title:'Error: Tabs Search Not Found ',
+						
+						show: {
+							effect: "bounce",
+							duration: 2000
+						  },
+						hide: {
+							effect: "fold",
+							duration: 1000
+						 },
+					    buttons: {
+							Ok: function() {
+							$( this ).dialog( "close" );
+							resetAll();
+							}
+					    }
+						
+					}); //end of error dialog box
+				}//end of error function
+			
+		}); //end of ajax call
+	}
+	
+	/**********************************************************************************************
+	*function to call reset
+	*
+	***************************************************************************************/
+	function resetAll(){
+		//$('#output').empty();
+		$('#output').hide("slide", { direction: "up" }, 900);
+		$('#resultsTitle').empty();
+	}
+	/*********************************************************************************************
+	*call to display tool tip plugin effects when called through functions like onmouseover
+	*
+	*********************************************************************************************/
+	function callToolTip(){
+		$('.tooltip').tooltipster();
+	}
+	/*************************************************************************************
+	* animation for table
+	*
+	**********************************************************************************/
+		function showAnimation(){
+		$('#output').hide("slide", { direction: "down" }, 900);
+		$("#output").show("slide", { direction: "up" }, 500);
+	}
+	/*************************************************************************
+	* function validate
+	*
+	*******************************************************************/
+	function validate_input_tag(){
+		if($('.itext').find($('div,span,script,alert,p,h2,h1,h3,h4,h5,h6,br'))){
+				alert("found");
+		}
+	
+	}
+	$('.itext').keyup(function() {
+  alert('Handler for .keyup() called.');
+});
+</script>
+</head>
+<body>
+		  <h2 class="label-silver title">Emergency Service Directory</h2>
+		  <div id="list">
+			<ul>
+				<li><a href="#">PHYSCIAN</a></li>
+				<li><a href="#">AMBULANCE</a></li>
+				<li><a href="#">Fire Department</a></li>
+				<li><a href="#">Helicopter/Air Transport</a></li>
+				<li><a href="#">Home Care Agency</a></li>
+				<li><a href="#">Hospital</a></li>
+				<li><a href="#">Law Enforcement Agency</a></li>
+				<li><a href="#">Nursing Home</a></li>
+				<li><a href="#">Resource</a></li>
+				<li><a href="#">Urgent Care Facility</a></li>
+				<li><a href="#">Other</a></li>
+				<li><a href="#">Hospice</a></li>
+				<li><a href="#">Schoool</a></li>
+				<li><a href="#">Emergency Shelter</a></li>
+			
+			</ul>
+		</div>
+		  <form>
+			<!--<input type="text" id="orgId"/><input type="button" 
+					value="find data" onclick="getTabs($('#orgId').val())"/>-->
+			<!-- id to dump the modal window containing tabs -->
+			<div id="dump"></div>
+		  </form>
+		  
+		  <hr>
+		  
+		  <form method="post" action="" id="Form1">
+			<fieldset>
+			  <legend class="label-black label-shadow-radius">Search Criteria</legend>
+			  <p><span class="label-green label-shadow-radius">Organization Type</span><select id="orgType"  name="type" class="tooltip" onmouseover="callToolTip()" title="Select the Organization you whish to Search"
+		onchange="(this.value=='Physician')?$('#orgLabel').html('Physician\'s Name'):
+			$('#orgLabel').html('Organization Name')" ></select></p>
+			  <p ><span class="label-yellow label-shadow-radius" id="orgLabel">Organization Name</span>
+		<input id="orgName" name="name" type="text" class="tooltip itext"  title="Optional Entry to narrow down the search"><em style="color: rgb(104, 129, 162);" >
+			*can be partial - "vol" for "Volunteer"</em></p>
+		<span class="label-red label-shadow-radius">State</span>
+		<select id="state" name="state" onchange="getCities(this.value)">
+				<option value="">All States</option>
+				<option value="AK">AK</option>
+
+				<option value="AL">AL</option>
+				<option value="AR">AR</option>
+				<option value="AZ">AZ</option>
+				<option value="CA">CA</option>
+				<option value="CO">CO</option>
+				<option value="CT">CT</option>
+
+				<option value="DC">DC</option>
+				<option value="DE">DE</option>
+				<option value="FL">FL</option>
+				<option value="GA">GA</option>
+				<option value="HI">HI</option>
+				<option value="IA">IA</option>
+
+				<option value="ID">ID</option>
+				<option value="IL">IL</option>
+				<option value="IN">IN</option>
+				<option value="KS">KS</option>
+				<option value="KY">KY</option>
+				<option value="LA">LA</option>
+
+				<option value="MA">MA</option>
+				<option value="MD">MD</option>
+				<option value="ME">ME</option>
+				<option value="MI">MI</option>
+				<option value="MN">MN</option>
+				<option value="MO">MO</option>
+
+				<option value="MS">MS</option>
+				<option value="MT">MT</option>
+				<option value="NC">NC</option>
+				<option value="ND">ND</option>
+				<option value="NE">NE</option>
+				<option value="NH">NH</option>
+
+				<option value="NJ">NJ</option>
+				<option value="NM">NM</option>
+				<option value="NV">NV</option>
+				<option value="NY" selected="selected">NY</option>
+				<option value="OH">OH</option>
+				<option value="OK">OK</option>
+
+				<option value="OR">OR</option>
+				<option value="PA">PA</option>
+				<option value="RI">RI</option>
+				<option value="SC">SC</option>
+				<option value="SD">SD</option>
+				<option value="TN">TN</option>
+
+				<option value="TX">TX</option>
+				<option value="UT">UT</option>
+				<option value="VA">VA</option>
+				<option value="VT">VT</option>
+				<option value="WA">WA</option>
+				<option value="WI">WI</option>
+
+				<option value="WV">WV</option>
+				<option value="WY">WY</option>
+
+			</select>
+		<span id="orgCitySearch">
+		</span>
+		<p>
+		<span class="label-orange label-shadow-radius itext"  >County</span>
+		<input id="county" type="text"/>
+		</p><p>
+		<span class="label-dark-blue label-shadow-radius itext" onclick="validate_input_tag();"> ZIP Code</span>
+		<input id="zip" type="text" name="zip"/></p>
+		<div style="margin:0 0 0 210px"><input value="Show Results" onclick="checkSearch()" 
+			id="btnSearch" class="button label-silver label-shadow-radius" type="button"/>&nbsp;<input type="reset" 
+			class="button label-silver label-shadow-radius" value="Reset Form" onclick="resetAll()"/>
+			</div>
+			</fieldset>
+		  </form>
+		
+		  <!-- id result title displays the no of results found -->
+		  <div id="resultsTitle"></div>
+		  <!-- id ouptut binds the result of table to this div-->
+		  <div id="output"></div>
+		  <!--display Error dialog box form jquery UI plugin-->
+		  <div id="modal_error" class="my_plugin" style="display:none;font-size:80%;width:15em;">
+			<span style="float: left; margin-right:1.3em;" class="ui-icon ui-icon-alert"></span>
+			Sorry For the Inconvinence. <br/>At this moment we do not have any data to display for the selected Search criteria<br/>
+			<span style="color:red;text-align: center; font-size: 15pt; font-weight: bold">Try Again Later</span>
+		  </div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
